@@ -3,6 +3,7 @@ module github.com/chayaninpia/go-backend-microservice/pdst001
 go 1.18
 
 require (
+	github.com/chayaninpia/go-backend-microservice/models v0.0.1
 	github.com/lib/pq v1.10.7
 	github.com/segmentio/kafka-go v0.4.38
 	github.com/spf13/viper v1.15.0
@@ -34,3 +35,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	xorm.io/builder v0.3.12 // indirect
 )
+
+replace github.com/chayaninpia/go-backend-microservice/models => ../models

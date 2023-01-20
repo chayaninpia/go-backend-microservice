@@ -9,14 +9,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Consumer(topic string, partition int) ([]byte, error) {
+func Consumer(topic string, partition int, ch chan []byte) error {
 	// to consume messages
 	server := viper.GetString(`kafka.serverAddress`)
 	port := viper.GetString(`kafka.serverPort`)
 
 	conn, err := kafka.DialLeader(context.Background(), "tcp", fmt.Sprintf("%s:%s", server, port), topic, partition)
 	if err != nil {
-		return nil, fmt.Errorf("failed to dial leader: %s", err.Error())
+		return fmt.Errorf("failed to dial leader: %s", err.Error())
 	}
 
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
@@ -25,7 +25,7 @@ func Consumer(topic string, partition int) ([]byte, error) {
 	for {
 		_, err := conn.Read(b)
 		if err != nil {
-			return nil, fmt.Errorf("read msg failed: %s", err.Error())
+			return fmt.Errorf("read msg failed: %s", err.Error())
 		}
 		if len(b) > 0 {
 			break
@@ -33,9 +33,11 @@ func Consumer(topic string, partition int) ([]byte, error) {
 	}
 
 	if err := conn.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close connection: %s", err)
+		return fmt.Errorf("failed to close connection: %s", err)
 	}
-	return b, nil
+
+	ch <- b
+	return nil
 }
 
 // func Consumer(c *kafka.Consumer, topic string) *kafka.Message {
