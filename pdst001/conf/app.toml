@@ -1,0 +1,16 @@
+
+portLocal = 9996
+port = 9997
+serviceId = "pdst001"
+
+[db]
+    host      = "deploy-db-1"
+	hostLocal = "localhost"
+	port      = 5432
+	user      = "postgres"
+	password  = "1234"
+	dbname    = "test_app"
+
+[kafka]
+  serverAddress = "localhost"
+  serverPort = 9092
