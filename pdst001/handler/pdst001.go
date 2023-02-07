@@ -11,8 +11,13 @@ type Pdst001Handler struct {
 	pdst001O *models.Pdst001O
 }
 
+func NewHandler() *Pdst001Handler {
+	return &Pdst001Handler{}
+}
+
 func (h *Pdst001Handler) Pdst001(req *models.Pdst001I) (*models.Pdst001O, error) {
 
+	h.pdst001I = req
 	e, err := util.InitXorm()
 	if err != nil {
 		return nil, err
@@ -61,7 +66,7 @@ func (h *Pdst001Handler) QueryStock(e *xorm.Engine) error {
 			ProductId:   v[`id`].(string),
 			BarcodeId:   v[`barcode_id`].(string),
 			ProductName: v[`product_name`].(string),
-			Quantity:    int(v[`quantity`].(int32)),
+			Quantity:    v[`quantity`].(int32),
 		})
 	}
 

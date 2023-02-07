@@ -22,7 +22,9 @@ func Producer(msg []byte, topic string, partition int) error {
 
 	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	_, err = conn.WriteMessages(
-		kafka.Message{Value: msg},
+		kafka.Message{
+			Key:   []byte(time.Now().String()),
+			Value: msg},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to write messages: %s", err.Error())

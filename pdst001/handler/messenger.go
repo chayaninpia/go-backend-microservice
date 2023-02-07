@@ -6,43 +6,53 @@ import (
 
 	"github.com/chayaninpia/go-backend-microservice/models"
 	"github.com/chayaninpia/go-backend-microservice/pdst001/util"
+	"github.com/segmentio/kafka-go"
 	"github.com/spf13/viper"
 )
 
-func Messenger() {
+//Need to implement models on type service
+type Service func(req *models.Pdst001I) (*models.Pdst001O, error)
 
-	h := Pdst001Handler{}
+func Messenger(service Service) {
 
 	topic := viper.GetString("serviceId")
-	ch := make(chan []byte)
+	ch := make(chan *kafka.Message, 1)
 	go util.Consumer(topic, 0, ch)
 
 	for {
+
+		m := <-ch
+		if m == nil {
+			continue
+		}
+
+		//Need to implement models on request models
 		req := models.Pdst001I{}
-		msg, recived := <-ch
-		if recived {
-			if err := json.Unmarshal(msg, &req); err != nil {
-				log.Fatalln(err.Error())
-			}
 
-			res, err := h.Pdst001(&req)
+		if err := json.Unmarshal(m.Value, &req); err != nil {
+			log.Println(err.Error())
+		}
 
-			msg := make([]byte, 0)
+		res, err := service(&req)
+
+		msg := make([]byte, 0)
+		if err != nil {
+			msg, err = json.Marshal(err)
 			if err != nil {
-				msg, err = json.Marshal(err)
-				if err != nil {
-					log.Fatalln(err.Error())
-				}
-			} else {
-				msg, err = json.Marshal(res)
-				if err != nil {
-					log.Fatalln(err.Error())
-				}
+				log.Println(err.Error())
 			}
+			log.Printf("error : %++v", err.Error())
+		} else {
+			msg, err = json.Marshal(res)
+			if err != nil {
+				log.Println(err.Error())
+			}
+			log.Printf("response : %++v", res)
+		}
 
-			if err := util.Producer(msg, topic, 0); err != nil {
-				log.Fatalln(err.Error())
-			}
+		log.Println(string(msg))
+		if err := util.Producer(msg, topic, 1); err != nil {
+			log.Println(err.Error())
 		}
 	}
 }

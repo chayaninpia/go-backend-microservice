@@ -12,5 +12,5 @@ serviceId = "pdst001"
 	dbname    = "test_app"
 
 [kafka]
-  serverAddress = "localhost"
+  serverAddress = "127.0.0.1"
   serverPort = 9092

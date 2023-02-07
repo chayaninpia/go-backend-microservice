@@ -3,41 +3,62 @@ package util
 import (
 	"context"
 	"fmt"
-	"time"
+	"log"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/spf13/viper"
 )
 
-func Consumer(topic string, partition int, ch chan []byte) error {
+func Consumer(topic string, partition int, ch chan<- *kafka.Message) (*kafka.Message, error) {
 	// to consume messages
 	server := viper.GetString(`kafka.serverAddress`)
 	port := viper.GetString(`kafka.serverPort`)
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", fmt.Sprintf("%s:%s", server, port), topic, partition)
-	if err != nil {
-		return fmt.Errorf("failed to dial leader: %s", err.Error())
-	}
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:   []string{fmt.Sprintf("%s:%s", server, port)},
+		Topic:     topic,
+		Partition: partition,
+		MaxBytes:  10e6,
+	})
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-
-	b := make([]byte, 10e3) // 10KB max per message
 	for {
-		_, err := conn.Read(b)
+		msg, err := reader.ReadMessage(context.Background())
 		if err != nil {
-			return fmt.Errorf("read msg failed: %s", err.Error())
+			return nil, fmt.Errorf("read msg failed: %s", err.Error())
 		}
-		if len(b) > 0 {
-			break
+		log.Printf("waiting msg ")
+		if len(msg.Value) > 0 {
+			log.Println("msg coming", string(msg.Value))
+			ch <- &msg
+			// return &msg, nil
 		}
 	}
+	// conn, err := kafka.DialLeader(context.Background(), "tcp", fmt.Sprintf("%s:%s", server, port), topic, partition)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to dial leader: %s", err.Error())
+	// }
 
-	if err := conn.Close(); err != nil {
-		return fmt.Errorf("failed to close connection: %s", err)
-	}
+	// // conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 
-	ch <- b
-	return nil
+	// b := make([]byte, 10e5) // 100KB max per message
+	// for {
+
+	// 	_, err = conn.Read(b)
+	// 	if err != nil {
+	// 		return fmt.Errorf("read msg failed: %s", err.Error())
+	// 	}
+	// 	log.Printf("waiting msg ")
+	// 	if len(b) > 0 {
+	// 		log.Printf(string(b))
+	// 		ch <- b
+	// 	}
+	// }
+
+	// if err := conn.Close(); err != nil {
+	// 	return fmt.Errorf("failed to close connection: %s", err)
+	// }
+
+	// return nil
 }
 
 // func Consumer(c *kafka.Consumer, topic string) *kafka.Message {

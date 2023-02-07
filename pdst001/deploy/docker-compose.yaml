@@ -1,0 +1,12 @@
+version: '2'
+services:
+  pdst001:
+    image: 'pdst001'
+    container_name: pdst001
+    ports:
+      - '8000:8000'
+    networks:
+      - backend    
+networks:
+  backend:
+    name: backend

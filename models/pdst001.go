@@ -12,5 +12,5 @@ type Pdst001IChild struct {
 	ProductId   string `json:"productId" `
 	BarcodeId   string `json:"barcodeId"`
 	ProductName string `json:"productName" `
-	Quantity    int    `json:"quantity" `
+	Quantity    int32  `json:"quantity" `
 }
